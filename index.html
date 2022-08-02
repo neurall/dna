@@ -1,31 +1,42 @@
-<style>*{margin:0;padding:0;overflow:hidhden}</style><body>
-    <input style="display:nonfe" type="file" onchange="onfile(this)">
-    <script>d=document; h=0; url="https://www.ncbi.nlm.nih.gov/nuccore/NC_000023.gene?report=fasta&log$=seqview&format=text&from&to"
-mx=0x1000*0x1000; m2=mx*6;
-function onfile(f) { fr=new FileReader(); fr.onload=ontext; fr.readAsText(f.files[0]); }
-function ontext( ) {
-    h=this.result.replace(/>.*\n/g,'').replace(/\n/g,'')
-    onresize()
-}
-//onclick=function(){ if(!h) d.querySelector('input').click();  } 
-onresize=function(){ps=0;
-    d.body.innerHTML=''
-    while(h&&ps<h.length) {
-        ca=d.createElement('canvas'); ctx=ca.getContext('2d'); d.body.appendChild(ca) 
-        dx=d.documentElement.clientWidth*devicePixelRatio; dy=parseInt(mx/dx); 
-        ca.style.width=dx/devicePixelRatio;  ca.width=dx;  
-        ca.style.height=dy/devicePixelRatio; ca.height=dy; 
-        id=ctx.getImageData(0, 0, dx, dy);
-        for(var x=0;x< id.data.byteLength;x+=4,ps++){  if(ps==h.length) break; u=h[ps]     
-                 if(u=='A'){ id.data[x]=255; id.data[x+1]=0  ; id.data[x+2]=0  ; id.data[x+3]=255; }
-            else if(u=='C'){ id.data[x]=0  ; id.data[x+1]=255; id.data[x+2]=0  ; id.data[x+3]=255; }
-            else if(u=='G'){ id.data[x]=0  ; id.data[x+1]=0  ; id.data[x+2]=255; id.data[x+3]=255; }
-            else if(u=='T'){ id.data[x]=255; id.data[x+1]=255; id.data[x+2]=0  ; id.data[x+3]=255; }
-            else if(u=='U'){ id.data[x]=255; id.data[x+1]=255; id.data[x+2]=0  ; id.data[x+3]=255; }
-            else if(u=='N'){ id.data[x]=0  ; id.data[x+1]=0  ; id.data[x+2]=0  ; id.data[x+3]=255; }
-        }
-        ctx.imageSmoothingEnabled=false
-        ctx.putImageData(id, 0, 0);
+<style>*{margin:0;padding:0;overflow:hidhden}
+body{position:absolute;width:100%;height:100%}</style><body>
+<script>d=document; mx=0x1000*0x1000; ps=dt=bc=h=ctrl=xhr=0; m2=mx*6; id=568336023; td=new TextDecoder();
+ca=d.createElement('canvas'); ctx=ca.getContext('2d'); d.body.appendChild(ca);     ctx.imageSmoothingEnabled=false; 
+url="https://www.ncbi.nlm.nih.gov/sviewer/viewer.cgi?id="+id;
+fetch(url).then(response => response.text()).then((response) => {bc=parseInt(response.split('\n')[0].replace(/ +/g,' ').split(' ')[2]);onscroll() })
+function draw(){   
+    rem=Math.min(dt.data.byteLength-ps,h.length); uu=0
+    while(rem>0){  u=h[uu]     
+             if(u=='A'){ dt.data[ps]=255; dt.data[ps+1]=0  ; dt.data[ps+2]=0  ; dt.data[ps+3]=255; }
+        else if(u=='C'){ dt.data[ps]=0  ; dt.data[ps+1]=255; dt.data[ps+2]=0  ; dt.data[ps+3]=255; }
+        else if(u=='G'){ dt.data[ps]=0  ; dt.data[ps+1]=0  ; dt.data[ps+2]=255; dt.data[ps+3]=255; }
+        else if(u=='T'){ dt.data[ps]=255; dt.data[ps+1]=255; dt.data[ps+2]=0  ; dt.data[ps+3]=255; }
+        else if(u=='U'){ dt.data[ps]=255; dt.data[ps+1]=255; dt.data[ps+2]=0  ; dt.data[ps+3]=255; }
+        else if(u=='N'){ dt.data[ps]=0  ; dt.data[ps+1]=0  ; dt.data[ps+2]=0  ; dt.data[ps+3]=255; }
+        rem--; ps+=4; uu++;
     }
+    ctx.putImageData(dt, 0, 0);
 }
+function work(chunk){
+    draw()
+}
+function recv(work,url){ if(ctrl) ctrl.abort(); ctrl = new AbortController(); ps=0;
+    consume = responseReader => { return responseReader.read().then(result => { if (result.done) { return; }
+        h = td.decode(result.value); if(h[0]=='>') h=h.replace(/>.*\n/g,''); h=h.replace(/\n/g,''); work(h); return consume(responseReader);
+    })}; 
+    from=Math.ceil(((scrollY/dy)*bc)/dx)*dx ;to=Math.ceil(from+(dx*dy*10))
+    fetch(url+"&report=fasta&from="+from+"&to="+to,{signal:ctrl.signal}).then(response => {return consume(response.body.getReader())}).catch(console.log.bind(console));    
+}
+onscroll=function(){ console.log('scroll')
+     if(bc) recv(work,url);
+}
+onresize=function(){
+    dx=d.documentElement.clientWidth*devicePixelRatio; 
+    dy=innerHeight*10*devicePixelRatio; 
+    ca.width =dx; ca.style.width =dx/devicePixelRatio;   
+    ca.height=dy; ca.style.height=dy/devicePixelRatio; 
+    dt=ctx.getImageData(0, 0, dx, dy);
+    ps=0; draw()
+}  
+onresize()
 </script>
