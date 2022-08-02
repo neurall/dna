@@ -1,11 +1,13 @@
-<style>*{margin:0;padding:0;overflow:hidhden}</style><body><input style="display:none" type="file" id="input" onchange="onfile(this)"><script>d=document; h=0; 
+<style>*{margin:0;padding:0;overflow:hidhden}</style><body>
+    <input style="display:nonfe" type="file" onchange="onfile(this)">
+    <script>d=document; h=0; 
 mx=0x1000*0x1000; m2=mx*6;
 function onfile(f) { fr=new FileReader(); fr.onload=ontext; fr.readAsText(f.files[0]); }
 function ontext( ) {
     h=this.result.replace(/>.*\n/g,'').replace(/\n/g,'')
     onresize()
 }
-onclick=function(){ if(!h) d.querySelector('input').click();  } 
+//onclick=function(){ if(!h) d.querySelector('input').click();  } 
 onresize=function(){ps=0;
     d.body.innerHTML=''
     while(h&&ps<h.length) {
