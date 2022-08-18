@@ -1,9 +1,7 @@
 https://neurall.github.io/dna/
  I was curious how dna actually looks like as a raw data.
  
- So I thrown together simple short easily hackable DNA visualiser.
- 
- Thats downloads and shows in realtime line by line chromosome 1
+ So I thrown together simple short easily hackable DNA visualiser that downloads and shows in realtime line by line chromosome 1
  where all of 4 letters have unique 4 colors.
  
  I am mostly curious about what will I actually see.
