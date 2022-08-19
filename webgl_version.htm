@@ -1,0 +1,107 @@
+<style>html,body{margin:0;padding:0;overflow:hifggdden;bacbkground:black;position:absolute;width:100%;height:100%}</style><body>
+<script> dc=document; bc=sy=0; chr=568336023; txwidth=1024; txlines=2048; pl=txlines*txwidth; me={buttons:1,clientY:0}; done={}; db={}; 
+
+function download(url,ondata,type=0){ var xhr=new XMLHttpRequest(); xhr.open("get",url,true); if(type) xhr.responseType=type; xhr.onload=ondata; xhr.send(); return xhr}
+
+download(url="https://www.ncbi.nlm.nih.gov/sviewer/viewer.cgi?id="+chr,function() { 
+    bc=parseInt(this.response.split('\n')[0].replace(/ +/g,' ').split(' ')[2]); //onmousemove(me); 
+    pgs=Math.floor(bc/pl); onresize(); for(var i=0;i<pgs;i++) onmousemove({buttons:1,clientY:(i*(dc.body.clientHeight/pgs))-1})
+})
+ 
+function readdb(name,ondata) { 
+    if(!db[name]) { var tr=indexedDB.open(name,1); 
+       tr.onsuccess=(e)=>{ db[name]=e.target.result; return readdb(name,ondata); }; 
+       tr.onupgradeneeded=(e)=>{ db[name]=e.target.result; os=db[name].createObjectStore(name,{autoIncrement:false}); os.add(new Uint8Array(1),name);}
+    } else { var os=db[name].transaction(name).objectStore(name); var tr=os.get(name); tr.onsuccess=ondata; }
+}
+
+onmousedown=onmouseup=(e)=>{me=e};    
+onmousemove=function(e) { me=e; sy=Math.max(me.clientY,0); 
+    if(me.buttons) {      
+        var fc=Math.ceil((sy/dc.body.clientHeight)*pgs), from=fc*pl, to=(from+pl)+30000; if(fc<0) debugger
+        if(!done['get'+fc]) readdb(chr+'_'+fc,(e)=>{ var data=e.target.result;
+            if(data.byteLength==1) {done['get'+fc]=1; lastreq=new Date().getTime(); console.log('get',fc,from,to); 
+                download(url+"&report=fasta&from="+from+"&to="+to+"&pg="+fc,onnetdata,"arraybuffer").fc=fc;             
+            } else { done['get'+fc]=1; writetogpu(fc,data) }
+        }); 
+    } 
+}
+
+function onnetdata(){ var h=new Uint8Array(this.response),k=h.indexOf(10)+1,j=0; data=new Uint8Array(pl/4), tb=new Array(72); tb[65]=1; tb[67]=2; tb[71]=3;     
+    for(var i=k;i<h.byteLength;i++){ 
+        if(h[i]==10) { 
+            continue;
+        }
+        pos=(j/4)<<0; data[pos]+=tb[h[i]]<<((j%4)<<1); j++; if(pos==data.byteLength) break
+    } console.log('set',this.fc,h.byteLength)
+    var name=chr+'_'+this.fc; db[name].transaction(name,"readwrite").objectStore(name).put(data,name);
+    writetogpu(this.fc,data)
+}
+
+function writetogpu(fc,data) { 
+    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, fc*(txlines/4/4),txwidth,(txlines/4/4), gl.RGBA_INTEGER, gl.UNSIGNED_BYTE, data)
+}
+
+onresize=function(){ dpr=devicePixelRatio; 
+    ca.width=txwidth*16;ca.height=2024; 
+    if(gl.drawingBufferWidth!=ca.width) {
+        ca.width=gl.drawingBufferWidth; ca.height=gl.drawingBufferHeight;
+    }
+    gl.viewport(0,0,gl.drawingBufferWidth,gl.drawingBufferHeight);
+    //    gl.viewport(0,0,(ca.width/txdim)*ca.width,(ca.height/(64*pgs))*ca.height);
+    ca.style.width=Math.round(gl.drawingBufferWidth); ca.style.height=Math.round(gl.drawingBufferHeight); 
+}  
+
+function cc(a,b,c,d){ var ca=dc.createElement('canvas'); ca.ct=ca.getContext('2d');  ca.width=c; ca.height=d; ca.ct.fillStyle = 'blue'; ca.ct.fillRect(0,0,c,d);  ca.ct.fillStyle = a; var x=ca.width/3; ca.ct.fillRect(x+b*10,x+b*10,x+b*10,x+b*10);  return ca;}
+function cs(a,b)    { var sh=gl.createShader(a); gl.shaderSource(sh,b); gl.compileShader(sh); if(gl.getShaderParameter(sh,gl.COMPILE_STATUS)==0) alert(gl.getShaderInfoLog(sh)); return sh; }
+function cp(a,b,c,d){ var pg=gl.createProgram(); pg.vss='#version 300 es\nprecision highp float; in vec3 pos; in vec2 uv; out vec2 u; '; for(var i=0;i<d;i++) pg.vss+='uniform vec4 p'+i+'; '; gl.attachShader(pg,pg.vs=cs(gl.VERTEX_SHADER,pg.vss+=a));pg.fss='#version 300 es\nprecision highp float; in vec2 u;';for(var i=0;i<d;i++) pg.fss+='uniform vec4 p'+i+'; ';for(var i=0;i<c;i++)pg.fss+='uniform highp usampler2D s'+i+'; '; pg.fss+='out vec4 outc; '; gl.attachShader(pg,pg.fs=cs(gl.FRAGMENT_SHADER,pg.fss+=b));gl.linkProgram(pg);gl.useProgram(pg);for(var i=0;i<c;i++) { pg['s'+i]=gl.getUniformLocation(pg,"s"+i); gl.uniform1i(pg['s'+i],i); }; for(var i=0;i<d;i++) pg['p'+i]=gl.getUniformLocation(pg,"p"+i); return pg; }
+function cv(a,b)    { var bf=gl.createBuffer();  gl.bindBuffer(gl.ARRAY_BUFFER,bf);gl.bufferData(gl.ARRAY_BUFFER, b, gl.STATIC_DRAW);var p=0,s=0; for(var i in a) s+=a[i]*4; for(var i in a) {var l=gl.getAttribLocation(pg,i);gl.vertexAttribPointer(l,a[i],gl.FLOAT,gl.FALSE,s,p); p+=a[i]*4;gl.enableVertexAttribArray(l); } return bf; }
+function ct(a,b,c){ a.args=c; a.tx=gl.createTexture(); a.init=function(){gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); gl.activeTexture(gl.TEXTURE0 ); gl.bindTexture(gl.TEXTURE_2D,this.tx); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);}; a.onload=function(a){ this.init(); try{ gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE,this);}catch(e){console.log(e);}; gl.activeTexture(gl.TEXTURE0); this.dirty=true; }; a.src=b; return a; } 
+
+ca = dc.createElement('canvas'); gl = ca.getContext("webgl2");onresize(); dc.body.appendChild(ca); ca.style.cssText='position:absolute;display:block;image-rendering:pixelated;'; //dc.body.style.cssText='margin:0;background:black;overflow:hidden'; 
+    
+vs =        'void main(void) { u=uv; gl_Position = vec4((((pos.xy*p0.zw)+p0.xy)-0.5)*2.,0.,1.0); }';
+ps =        'void main(void) { highp uvec4 c = texture(s0,vec2(u.x,u.y)); float row=u.x*'+gl.drawingBufferWidth+'.;\
+    float md= mod(row,16.); uint rot = uint(md); uint a=0u; \
+         if(rot== 0u) a=c.x>>0;\
+    else if(rot== 1u) a=c.x>>2;\
+    else if(rot== 2u) a=c.x>>4;\
+    else if(rot== 3u) a=c.x>>6;\
+    else if(rot== 4u) a=c.y>>0;\
+    else if(rot== 5u) a=c.y>>2;\
+    else if(rot== 6u) a=c.y>>4;\
+    else if(rot== 7u) a=c.y>>6;\
+    else if(rot== 8u) a=c.z>>0;\
+    else if(rot== 9u) a=c.z>>2;\
+    else if(rot==10u) a=c.z>>4;\
+    else if(rot==11u) a=c.z>>6;\
+    else if(rot==12u) a=c.w>>0;\
+    else if(rot==13u) a=c.w>>2;\
+    else if(rot==14u) a=c.w>>4;\
+    else if(rot==15u) a=c.w>>6;\
+    a=a&3u;vec4 b=vec4(0,0,0,1.);\
+    if(a==1u) b=vec4(1.,0,0,1.);\
+    else if(a==2u) b=vec4(0,1.,0,1.);\
+    else if(a==3u) b=vec4(0,0,1.,1.);\
+    outc=b; vec4(md/15.,md/15.,md/15.,1.);\
+}'; 
+    pg = cp(vs,ps,1,2); 
+
+j=ct({}); j.init();  
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8UI,1024,0x4000, 0, gl.RGBA_INTEGER, gl.UNSIGNED_BYTE, new Uint8Array(0x4000*0x4000*4))
+
+    
+gl.bindBuffer(gl.ARRAY_BUFFER, cv( {pos:3,uv:2}, new Float32Array([
+0,0,0,0,0,
+1,0,0,1,0,
+0,1,0,0,1,
+1,1,0,1,1]))); 
+gl.bindTexture(gl.TEXTURE_2D, j.tx); 
+    
+function gldraw(time){  requestAnimationFrame(gldraw);         
+    gl.uniform4f(pg.p0, 0, 0, 1, 1 ); 
+    gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+}
+
+gldraw()
+</script>
