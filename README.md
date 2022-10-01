@@ -19,6 +19,10 @@ So far top of chromosome 1 is reddish bottom greenish ;)
 This is the most fascinating data I had ever chance to see.
 Considering I am looking at source code of pretty much everything alive on earth.
 
+As for fitting to gpu memory for latter comparsion shenanigans that I am definitely planing ;). 
+
+What is super cool, was that each from 26 human chromosomes has around 60 m  letters but since they are in just 4 letter alphabet "acgt", you can store it to texture with just 2 bits per letter and decode it back via simple pixel shader thus you can sample and draw 16x4 rgb pixels from4x4 texture which this sample does ;D. sad thing is float precision uv starts flling apart at 16k wide textured triangle and there is visible jumping seam which was unexpected ;(
+
 In next step I will try to simulate drawing folded dna while still showing colors. 
 
 Will some colors aggregate on outside ?
