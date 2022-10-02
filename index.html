@@ -20,7 +20,7 @@ function draw(){
 function work(chunk){
     draw()
 }
-function recv(work,url){ if(ctrl) ctrl.abort(); ctrl = new AbortController(); ps=0;
+function recv(work,url){ if(ctrl){ try{ ctrl.abort();}catch(e){}} ctrl = new AbortController(); ps=0;
     consume = responseReader => { return responseReader.read().then(result => { if (result.done) { return; }
         h = td.decode(result.value); if(h[0]=='>') h=h.replace(/>.*\n/g,''); h=h.replace(/\n/g,''); work(h); return consume(responseReader);
     })}; 
