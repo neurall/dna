@@ -1,4 +1,4 @@
-https://neurall.github.io/dna/
+https://neurall.github.io/dna/ https://neurall.github.io/dna/webgl_version.htm
  I was curious how dna actually looks like as a raw data.
  
  So I thrown together simple short easily hackable DNA visualiser that downloads and shows in realtime line by line chromosome 1
