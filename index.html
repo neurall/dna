@@ -1,7 +1,7 @@
 <style>*{margin:0;padding:0;overflow:hidhden}
 body{position:absolute;width:100%;height:100%}</style><body>
 <script>d=document; mx=0x1000*0x1000; ps=dt=bc=h=ctrl=xhr=0; m2=mx*6; id=568336023; td=new TextDecoder();
-ca=d.createElement('canvas'); ctx=ca.getContext('2d'); d.body.appendChild(ca);     ctx.imageSmoothingEnabled=false; 
+ca=d.createElement('canvas'); ctx=ca.getContext('2d'); d.body.appendChild(ca);     ctx.imageSmoothingEnabled=false; ctx.willReadFrequently=true;
 url="https://www.ncbi.nlm.nih.gov/sviewer/viewer.cgi?id="+id;
 fetch(url).then(response => response.text()).then((response) => {bc=parseInt(response.split('\n')[0].replace(/ +/g,' ').split(' ')[2]);onscroll() })
 function draw(){   
